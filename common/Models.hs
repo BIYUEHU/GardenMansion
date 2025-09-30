@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use newtype instead of data" #-}
-module Types where
+module Models where
 
 -- Types Definition
 
@@ -14,11 +14,27 @@ data ResMessageSingle = ResMessageSingle
   { req_messageId :: Int,
     req_messageText :: String,
     req_messageUserId :: Int,
-    req_messageReplyMessageId :: Maybe Int,
+    req_messageReplyId :: Maybe Int,
     req_messageReleaseTime :: String
   }
 
 type ResMessageApi = [ResMessageSingle]
+
+data ReqExpenseApi = ReqExpenseApi
+  { req_expenseUsername :: String,
+    req_expenseAmount :: Double,
+    req_expenseComment :: String
+  }
+
+data ResExpenseSingle = ResExpenseApi
+  { res_expenseId :: Int,
+    res_expenseUsername :: String,
+    res_expenseAmount :: Double,
+    res_expenseComment :: String,
+    res_expenseTime :: String
+  }
+
+type ResExpenseApi = [ResExpenseSingle]
 
 data ReqLoginApi = ReqLoginApi
   { req_loginUsername :: String,
@@ -35,10 +51,12 @@ data ReqInfoPasswordApi = ReqInfoPasswordApi
   }
 
 data ResInfoApi = ResInfoApi
-  { res_infoUsername :: String,
+  { res_infoUserId :: Int,
+    res_infoUsername :: String,
     res_infoEmail :: String,
     res_infoTime :: Int,
-    res_infoAlive :: Bool
+    res_infoAlive :: Bool,
+    res_infoAdmin :: Bool
   }
 
 data ReqMetaApi = ReqSettingApi
@@ -56,4 +74,32 @@ data ResMetaApi = ResMetaApi
     res_webNotice :: String,
     res_webStartTime :: String,
     res_webEndTime :: String
+  }
+
+data ReqUserApi = ReqUserApi
+  { req_userId :: String,
+    req_userAlive :: Bool
+  }
+
+data ResUserSingle = ResUserSingle
+  { res_userId :: Int,
+    res_userUsername :: String,
+    res_userEmail :: String,
+    res_userTime :: Int,
+    res_userAlive :: Bool,
+    res_userAdmin :: Bool
+  }
+
+type ResUserApi = [ResUserSingle]
+
+data ReqUserDeleteApi = ReqUserDeleteApi
+  { req_DeleteUserId :: String
+  }
+
+data ReqMessageDeleteApi = ReqMessageDeleteApi
+  { req_DeleteMessageId :: String
+  }
+
+data ReqExpenseDeleteApi = ReqExpenseDeleteApi
+  { req_DeleteExpenseId :: String
   }
