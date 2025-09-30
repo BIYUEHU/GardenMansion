@@ -1,3 +1,3 @@
-export const endsWith = (str) => (suffix) => str.endsWith(suffix)
+export const endsWith = (suffix) => (str) => str.endsWith(suffix)
 
-export const startsWith = (str) => (prefix) => str.startsWith(prefix)
+export const startsWith = (prefix) => (str) => str.startsWith(prefix)

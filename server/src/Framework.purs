@@ -1,15 +1,27 @@
 module Framework
-  ( AfterComponentFunction
-  , BeforeComponentFunction
+  ( AfterHandler
+  , BeforeHandler
   , Component(..)
-  , Handler
+  , Components
+  , Guard(..)
+  , Handler(..)
   , Headers
   , Method(..)
   , Query
   , Request(..)
   , Response(..)
+  , ResponseError(..)
+  , ResponseRaw
   , Rule(..)
+  , Server(..)
+  , Status(..)
+  , class Responseable
+  , close
   , createServer
+  , listen
+  , toInt
+  , toResponse
+  , toResponseRaw
   )
   where
 
@@ -19,16 +31,23 @@ import Data.Either (Either(..))
 import Data.List (List(..), find)
 import Data.List.NonEmpty (fromFoldable)
 import Data.List.Types (toList)
-import Data.Map (Map)
-import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), contains)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Utils (endsWith, filterMap, startsWith)
 
 data Method = GET | POST | PUT | DELETE | HEAD | OPTIONS
 
 derive instance Eq Method
+
+instance Show Method where
+  show GET = "GET"
+  show POST = "POST"
+  show PUT = "PUT"
+  show DELETE = "DELETE"
+  show HEAD = "HEAD"
+  show OPTIONS = "OPTIONS"
 
 parseMethod :: String -> Method
 parseMethod "GET" = GET
@@ -38,32 +57,91 @@ parseMethod "DELETE" = DELETE
 parseMethod "HEAD" = HEAD
 parseMethod _ = OPTIONS
 
-type Query = Map String String
+type Query = Array (Tuple String String)
 
-type Headers = Map String String
+type Headers = Array (Tuple String String)
 
 type Request =
   { query :: Query
   , headers :: Headers
   , method :: Method
   , path :: String
+  , url :: String
   , body :: String
   }
 
 data ResponsePrim
 
-type Response =
+type ResponseRaw =
   { status :: Int
   , headers :: Headers
   , body :: String
   }
+
+data Status = BadRequest
+            | Unauthorized
+            | Forbidden
+            | NotFound
+            | InternalServerError
+            | OK
+            | Created
+            | NoContent
+            | Status Int
+
+toInt :: Status -> Int
+toInt BadRequest = 400
+toInt Unauthorized = 401
+toInt Forbidden = 403
+toInt NotFound = 404
+toInt InternalServerError = 500
+toInt OK = 200
+toInt Created = 201
+toInt NoContent = 204
+toInt (Status s) = s
+
+derive instance Eq Status
+
+data Response = JsonRes String 
+              | HtmlRes String 
+              | TextRes String
+              | StatusRes Status
+              | JsonStatusRes Status String
+              | HtmlStatusRes Status String
+              | TextStatusRes Status String
+              | Raw ResponseRaw
+
+toResponseRaw :: Response -> ResponseRaw
+toResponseRaw (JsonRes body) = { status: toInt OK, headers: [Tuple "Content-Type" "application/json"], body }
+toResponseRaw (HtmlRes body) = { status: toInt OK, headers: [Tuple "Content-Type" "text/html"], body }
+toResponseRaw (TextRes body) =  { status: toInt OK, headers: [Tuple "Content-Type" "text/plain"], body }
+toResponseRaw (StatusRes status) = { status: toInt status, headers: [], body: "" }
+toResponseRaw (JsonStatusRes status body) = { status: toInt status, headers: [Tuple "Content-Type" "application/json"], body }
+toResponseRaw (HtmlStatusRes status body) = { status: toInt status, headers: [Tuple "Content-Type" "text/html"], body }
+toResponseRaw (TextStatusRes status body) = { status: toInt status, headers: [Tuple "Content-Type" "text/plain"], body }
+toResponseRaw (Raw res) = res
+
+derive instance Eq Response
+
+instance Show Response where
+  show res = show $ toResponseRaw res
+
+class Responseable a where
+  toResponse :: a -> Response
+
+instance Responseable Response where
+  toResponse = identity
 
 data ResponseError
 
 instance Show ResponseError where
   show _ = "ResponseError"
 
-data Rule = Any | StartWith String | EndWith String | Contains String | Is String | Not String
+data Rule = Any
+          | StartWith String
+          | EndWith String
+          | Contains String
+          | Is String
+          | Not String
 
 checkRule :: Rule -> String -> Boolean
 checkRule Any _ = true
@@ -73,23 +151,25 @@ checkRule (Contains s) path = contains (Pattern s) path
 checkRule (Is s) path = s == path
 checkRule (Not s) path = not (contains (Pattern s) path)
 
-type BeforeComponentFunction = Request -> Effect (Maybe Response)
+type BeforeHandler = Request -> Effect (Maybe Response)
 
-type AfterComponentFunction = Request -> Response -> Effect Response
+type AfterHandler = Request -> Response -> Effect Response
 
-type Guard a = { guard :: Request -> Effect (Either ResponseError a), handler :: Request -> a -> Effect Response }
+type Guard a = { guard :: Request -> Effect (Either ResponseError a), handler :: Request -> a -> Effect Response}
 
 data Handler = Direct (Request -> Effect Response) | Guard (forall a. Guard a)
 
 data Component = Route Method String Handler
-  | Before Rule (BeforeComponentFunction)
-  | After Rule (AfterComponentFunction)
+                | Before Rule (BeforeHandler)
+                | After Rule (AfterHandler)
 
-type BeforeComponents = List { rule :: Rule, components :: BeforeComponentFunction }
+type Components = Array Component
 
-type AfterComponents = List { rule::Rule,components :: AfterComponentFunction }
+type BeforeComponents = List { rule :: Rule, components :: BeforeHandler }
 
-checkBefores :: BeforeComponents -> BeforeComponentFunction
+type AfterComponents = List { rule::Rule,components :: AfterHandler }
+
+checkBefores :: BeforeComponents -> BeforeHandler
 checkBefores coms req = check coms Nothing
   where
     check :: BeforeComponents -> Maybe Response -> Effect (Maybe Response)
@@ -104,7 +184,7 @@ checkBefores coms req = check coms Nothing
       | otherwise = check rest Nothing
 
 
-checkAfters :: AfterComponents -> AfterComponentFunction
+checkAfters :: AfterComponents -> AfterHandler
 checkAfters Nil _ res = pure res
 checkAfters (Cons { rule, components } rest) req res
   | checkRule rule (req.path) = do
@@ -112,20 +192,20 @@ checkAfters (Cons { rule, components } rest) req res
       checkAfters rest req res'
   | otherwise = checkAfters rest req res
 
-foreign import setResponsePrim :: ResponsePrim -> Int -> Headers -> String -> Effect Unit
+foreign import setResponsePrim :: ResponsePrim -> Int -> Array (Array String) -> String -> Effect Unit
 
-setResponse :: ResponsePrim -> Response -> Effect Unit
-setResponse resPrim res = setResponsePrim resPrim res.status res.headers res.body
+setResponse :: ResponsePrim -> ResponseRaw -> Effect Unit
+setResponse resPrim ({ status, headers, body }) = setResponsePrim resPrim status (map (\(Tuple a b) -> [a, b]) headers) body
 
-type ServerOptions = { port :: Int, components :: Array Component, default :: Maybe (Request -> Effect Response) }
+data Server
 
-foreign import createServerPrim :: (Request -> ResponsePrim -> Effect Unit) -> (String -> Method) -> Effect Unit
+foreign import createServerPrim :: (Request -> ResponsePrim -> Effect Unit) -> (String -> String -> Tuple String String) -> (String -> Method) -> Effect Server
 
-createServer ::  ServerOptions -> Effect Unit
-createServer options = createServerPrim mainHandler parseMethod
+createServer :: Components -> Maybe (Request -> Effect Response) -> Effect Server
+createServer coms default = createServerPrim mainHandler  Tuple parseMethod
   where
     components :: List Component
-    components = case fromFoldable options.components of
+    components = case fromFoldable coms of
       Just x -> toList x
       Nothing -> Nil
 
@@ -149,10 +229,10 @@ createServer options = createServerPrim mainHandler parseMethod
       res' <- if res == Nothing then routes else pure res
       res'' <- case res' of
         Just res'' -> checkAfters afters req res''
-        Nothing -> case options.default of
+        Nothing -> case default of
           Just handler -> handler req
-          Nothing -> pure { status: 404, headers: Map.empty, body: "Not Found" }
-      setResponse resPrim res''
+          Nothing -> pure $ Raw { status: 404, headers: [], body: "Not Found" }
+      setResponse resPrim $ toResponseRaw res''
       where
         routes :: Effect (Maybe Response)
         routes = case find (\x ->
@@ -169,5 +249,9 @@ createServer options = createServerPrim mainHandler parseMethod
                     Right dat' -> do
                       res <- guard.handler req dat'
                       pure $ Just res
-                    Left err -> pure $ Just { status: 403, headers: Map.empty, body: show err }
+                    Left err -> pure $ Just $ Raw { status: 403, headers: [], body: show err }
                 _ -> pure Nothing
+
+foreign import listen :: Server -> Int -> Effect Unit -> Effect Unit
+
+foreign import close :: Server -> Effect Unit

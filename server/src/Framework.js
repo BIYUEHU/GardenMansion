@@ -1,28 +1,25 @@
 // @ts-check
-
 import { createServer } from 'node:http'
 
-export const createServerPrim = (callback) => (parseMethod) =>
+export const createServerPrim = (callback) => tuple => (parseMethod) => () =>
   createServer((req, res) => {
     let body = ''
     req.on('data', (chunk) => {
       body += chunk.toString()
     })
-
-    req.on('end', () => {
       const url = new URL(req.url ?? '', `http://${req.headers.host}`)
+    req.on('end', () => {
       try {
         callback(
+          // TODO: improve structure
           {
-            query: new Map(url.searchParams.entries()),
+            query: Array.from(url.searchParams).map(([k,v]) => tuple(k)(v)),
             body,
             path: url.pathname,
-            headers: new Map(Object.entries(req.headers)),
+            headers: Object.entries(req.headers).map(([k,v]) => tuple(k)(v ? Array.isArray(v) ? v.join(',') : v : '')),
             url: req.url ?? '',
             method: parseMethod(req.method ?? 'GET')
-          },
-          res
-        )
+          })(res)()
       } catch (error) {
         console.error('PureScript Error:', error)
         res.statusCode = 500
@@ -31,10 +28,20 @@ export const createServerPrim = (callback) => (parseMethod) =>
     })
   })
 
-export const setResponse = (resPrim) => (code) => (headers) => (body) => {
+export const setResponsePrim = (resPrim) => (code) => (headers) => (body) => () => {
   resPrim.statusCode = code
   for (const [key, value] of headers) {
     resPrim.setHeader(key, value)
   }
-  resPrim.end(JSON.stringify(body))
+  resPrim.end(body)
+}
+
+export const listen = (server) => (port) => (callback) => () => {
+  server.listen(port, () => {
+    callback()
+  })
+}
+
+export const close = (server) => () => {
+  server.close()
 }
