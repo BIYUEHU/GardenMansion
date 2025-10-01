@@ -26,7 +26,7 @@ data ReqExpenseApi = ReqExpenseApi
     req_expenseComment :: String
   }
 
-data ResExpenseSingle = ResExpenseApi
+data ResExpenseSingle = ResExpenseSingle
   { res_expenseId :: Int,
     res_expenseUsername :: String,
     res_expenseAmount :: Double,
@@ -41,7 +41,7 @@ data ReqLoginApi = ReqLoginApi
     req_loginPassword :: String
   }
 
-data ReqInfoRenameApi = ReqInfoApi
+data ReqInfoRenameApi = ReqInfoRenameApi
   { req_infoUsername :: String
   }
 
@@ -59,7 +59,7 @@ data ResInfoApi = ResInfoApi
     res_infoAdmin :: Bool
   }
 
-data ReqMetaApi = ReqSettingApi
+data ReqMetaApi = ReqMetaApi
   { req_webUrl :: String,
     req_webName :: String,
     req_webTitle :: String,
@@ -93,13 +93,13 @@ data ResUserSingle = ResUserSingle
 type ResUserApi = [ResUserSingle]
 
 data ReqUserDeleteApi = ReqUserDeleteApi
-  { req_DeleteUserId :: String
+  { req_deleteUserId :: String
   }
 
 data ReqMessageDeleteApi = ReqMessageDeleteApi
-  { req_DeleteMessageId :: String
+  { req_deleteMessageId :: String
   }
 
 data ReqExpenseDeleteApi = ReqExpenseDeleteApi
-  { req_DeleteExpenseId :: String
+  { req_deleteExpenseId :: String
   }

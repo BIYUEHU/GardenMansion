@@ -1,6 +1,7 @@
 {
 	"type": "module",
 	"devDependencies": {
+		"elm-debug-transformer": "^1.2.1",
 		"unocss": "^66.5.2",
 		"vite": "^7.1.7",
 		"vite-plugin-elm": "^3.0.1"
