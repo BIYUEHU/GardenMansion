@@ -1,12 +1,14 @@
 module Main
 
-add : Int -> Int -> Int
-add x y = x + y
-
-%foreign "javascript:lambda:(_, name, value) => () => {globalThis[name] = value;}"
-exportJs : forall a. String -> a -> IO ()
+import Async
+import Db
+import Exports
 
 main : IO ()
 main = do
-  exportJs "idris_add" add
-
+  exportCommonJs "create" create
+  exportCommonJs "get" getExternal
+  exportCommonJs "put" put
+  exportCommonJs "del" del
+  exportCommonJs "batch" batchExternal
+  exportCommonJs "close" close

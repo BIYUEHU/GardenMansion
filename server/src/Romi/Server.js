@@ -30,14 +30,6 @@ export const createServerPrim = (callback) => (tuple) => (parseMethod) => () =>
     })
   })
 
-export const setResponsePrim = (resPrim) => (code) => (headers) => (body) => () => {
-  resPrim.statusCode = code
-  for (const [key, value] of headers) {
-    resPrim.setHeader(key, value)
-  }
-  resPrim.end(body)
-}
-
 export const listen = (server) => (port) => (callback) => () => {
   server.listen(port, () => {
     callback()

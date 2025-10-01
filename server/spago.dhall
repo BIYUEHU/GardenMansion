@@ -1,12 +1,15 @@
 { name = "my-project"
 , dependencies =
-  [ "console"
+  [ "aff"
+  , "aff-promise"
+  , "console"
   , "effect"
   , "either"
   , "lists"
   , "maybe"
   , "prelude"
   , "strings"
+  , "transformers"
   , "tuples"
   ]
 , packages = ./packages.dhall
