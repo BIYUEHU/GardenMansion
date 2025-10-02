@@ -21,4 +21,3 @@ build
 client/src/Models.elm
 server/src/Models.purs
 server/db
-db/db

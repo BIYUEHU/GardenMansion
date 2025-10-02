@@ -3,6 +3,7 @@ set windows-shell := ["powershell.exe"]
 dir := justfile_directory()
 server := dir + "/server"
 client := dir + "/client"
+db := dir + "/db"
 
 # List all available tasks
 default:
@@ -20,7 +21,7 @@ dev-b:
 
 # Build
 build:
-  just build-f; just build-b
+  just build-f; just build-d; just build-b
 
 # Build frontend
 build-f:
@@ -31,6 +32,11 @@ build-f:
 build-b:
   @echo "🏗️  Building backend..."
   cd {{server}}; spago build
+
+# Build database
+build-d:
+  @echo "🏗️  Building database..."
+  cd {{db}}; idris2 --cg node --build
 
 # Clean build files
 clean:
@@ -44,3 +50,8 @@ clean:
 test:
   @echo "🧪 Testing backend..."
   cd {{server}}; spago test
+
+# Renerate types
+generate:
+  @echo "🤖 Generating types..."
+  python scripts/generate.py

@@ -20,21 +20,25 @@ data ResMessageSingle = ResMessageSingle
 
 type ResMessageApi = [ResMessageSingle]
 
+type ModelMessages = [ResMessageSingle]
+
 data ReqExpenseApi = ReqExpenseApi
-  { req_expenseUsername :: String,
+  { req_expenseUserId :: String,
     req_expenseAmount :: Double,
     req_expenseComment :: String
   }
 
 data ResExpenseSingle = ResExpenseSingle
   { res_expenseId :: Int,
-    res_expenseUsername :: String,
+    res_expenseUserId :: String,
     res_expenseAmount :: Double,
     res_expenseComment :: String,
     res_expenseTime :: String
   }
 
 type ResExpenseApi = [ResExpenseSingle]
+
+type ModelExpenses = [ResExpenseSingle]
 
 data ReqLoginApi = ReqLoginApi
   { req_loginUsername :: String,
@@ -51,8 +55,8 @@ data ReqInfoPasswordApi = ReqInfoPasswordApi
   }
 
 data ResInfoApi = ResInfoApi
-  { res_infoUserId :: Int,
-    res_infoUsername :: String,
+  { res_infoId :: Int,
+    res_infoName :: String,
     res_infoEmail :: String,
     res_infoTime :: Int,
     res_infoAlive :: Bool,
@@ -72,9 +76,10 @@ data ResMetaApi = ResMetaApi
     res_webName :: String,
     res_webTitle :: String,
     res_webNotice :: String,
-    res_webStartTime :: String,
-    res_webEndTime :: String
+    res_webStartTime :: Int
   }
+
+type ModelMeta = ResMetaApi
 
 data ReqUserApi = ReqUserApi
   { req_userId :: String,
@@ -83,7 +88,7 @@ data ReqUserApi = ReqUserApi
 
 data ResUserSingle = ResUserSingle
   { res_userId :: Int,
-    res_userUsername :: String,
+    res_userName :: String,
     res_userEmail :: String,
     res_userTime :: Int,
     res_userAlive :: Bool,
@@ -103,3 +108,15 @@ data ReqMessageDeleteApi = ReqMessageDeleteApi
 data ReqExpenseDeleteApi = ReqExpenseDeleteApi
   { req_deleteExpenseId :: String
   }
+
+data ModelUserSingle = ModelUserSingle
+  { userId :: Int,
+    userName :: String,
+    userPassword :: String,
+    userEmail :: String,
+    userTime :: Int,
+    userAlive :: Bool,
+    userAdmin :: Bool
+  }
+
+type ModelUsers = [ModelUserSingle]

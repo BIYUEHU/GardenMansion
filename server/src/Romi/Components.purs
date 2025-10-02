@@ -6,16 +6,17 @@ module Romi.Components
   , Component(..)
   , Components
   , Guard
-  , Handler(..)
+  , Handler
   , Rule(..)
   , checkAfters
   , checkBefores
+  , guarded
   )
   where
 
 import Prelude
 
-import Data.Either (Either)
+import Data.Either (Either(..))
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), contains)
@@ -43,9 +44,16 @@ type BeforeHandler a = Request -> Romi a (Maybe Response)
 
 type AfterHandler a =  Request -> Response -> Romi a Response
 
-type Guard a b = { guard :: Request -> Romi a (Either Response b), handler :: Request -> b -> Romi a Response}
+type Handler a = Request -> Romi a Response
 
-data Handler a = Direct (Request -> Romi a Response) | Guard (forall b. Guard a b)
+type Guard a b = Request -> Romi a (Either Response b)
+
+guarded :: forall a b. Guard a b -> (Request -> b -> Romi a Response) -> Handler a
+guarded schema run req = do
+  res <- schema req
+  case res of
+    Left err -> pure err
+    Right v  -> run req v
 
 data Component a = Route Method String (Handler a)
                 | Before Rule (BeforeHandler a)

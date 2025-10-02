@@ -34,10 +34,42 @@ node:lambda:(db, key, value) => async () => await db.put(key, value)
 put : DB -> (key : String) -> (value : String) -> AsyncIO ()
 
 public export
+putIf : DB -> (key : String) -> (value : String) -> (test : Maybe String -> Bool) -> AsyncIO ()
+putIf db key value test = do
+  result <- get db key
+  if test result then put db key value else pure ()
+
+public export
+putOrIf : DB -> (key : String) -> (value : String) -> (test : String -> Bool) -> AsyncIO ()
+-- putOrIf db key value test = putIf db key value $ maybe True test
+putOrIf db key value test = do
+  result <- get db key
+  case result of
+    Just v => if test v then put db key value else pure ()
+    Nothing => put db key value
+
+public export
+putOr : DB -> (key : String) -> (value : String) -> AsyncIO ()
+-- putOr db key value = putIf db key value $ maybe True $ const False
+putOr db key value = do
+  result <- get db key
+  case result of
+    Just _ => pure ()
+    Nothing => put db key value
+
+public export
 %foreign """
 node:lambda:(db, key) => async () => await db.del(key)
 """
 del : DB -> (key : String) -> AsyncIO ()
+
+public export
+delOrIf : DB -> (key : String) -> (test : String -> Bool) -> AsyncIO ()
+delOrIf db key test = do
+  result <- get db key
+  case result of
+    Just v => if test v then del db key else pure ()
+    Nothing => pure ()
 
 public export
 data BatchOp : Type where

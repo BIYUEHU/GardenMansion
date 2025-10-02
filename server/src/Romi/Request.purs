@@ -41,12 +41,10 @@ type Headers = Array (Tuple String String)
 select :: Array (Tuple String String) -> String -> Maybe String
 select kvs key = snd <$> find (\(Tuple k _) -> k == key) kvs
 
-
 type Request =
   { query :: Query
   , headers :: Headers
   , method :: Method
   , path :: String
-  , url :: String
   , body :: String
   }
