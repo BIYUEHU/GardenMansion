@@ -7,7 +7,7 @@ module Models where
 
 data ReqMessageApi = ReqMessageApi
   { res_messageText :: String,
-    res_messageReplyMessageId :: String
+    res_messageReplyId :: Maybe Int
   }
 
 data ResMessageSingle = ResMessageSingle

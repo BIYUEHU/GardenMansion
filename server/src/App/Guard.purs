@@ -2,18 +2,29 @@ module App.Guard where
 
 import Prelude
 
+import App.Auth (parseToken)
+import App.Models (users)
 import App.Schema (parseReqMessageApi)
-import App.Types (GuardState, State(..))
-import Control.Monad.Reader (ask)
-import Data.Bifunctor (lmap, rmap)
+import App.Types (GuardState)
+import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Models (ReqMessageApi, ResUserSingle)
-import Romi.Response (Response(..), Status(..), errorSchema)
+import Models (ModelUserSingle, ReqMessageApi)
+import Romi.Request (select)
+import Romi.Response (errorForbidden, errorSchema)
 
-checkCreatingMessage :: GuardState { dat::ReqMessageApi, user :: ResUserSingle }
-checkCreatingMessage req = do
-  s <- ask
-  pure $ case s of
-    State { user: Just user } -> rmap (\dat -> { dat, user }) $ lmap errorSchema $ parseReqMessageApi req.body
-    _ -> Left $ StatusRes BadRequest
+authFactory :: forall a. GuardState a -> GuardState { dat :: a, user :: ModelUserSingle }
+authFactory f req = do
+  result <- f req
+  case result of
+    Left res -> pure $ Left res
+    Right dat -> case select req.headers "Authorization" >>= parseToken of
+      Just { name, password } -> do
+        user <- users.select (\{userName, userPassword, userAlive} -> userName == name && userPassword == password && userAlive)
+        pure $ case user of
+          Just user' -> Right { dat, user: user' }
+          Nothing -> Left $ errorForbidden "Invalid credentials"
+      Nothing -> pure $ Left $ errorForbidden "Authorization header not found"
+
+checkCreatingMessage :: GuardState ReqMessageApi
+checkCreatingMessage req = pure $ lmap errorSchema $ parseReqMessageApi req.body

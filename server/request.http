@@ -1,6 +1,23 @@
-GET http://localhost:8080/ HTTP/1.1
-Content-Type: application/json
+@URL = http://localhost:8080/api
+@USERNAME = test
+@PASSWORD = 233
+
+GET {{URL}}/messages HTTP/1.1
+
+###
+
+POST {{URL}}/messages HTTP/1.1
+Body:
 
 {
-  "name": "John 我我"
+  "messageText": "Hello, world!",
+  "messageReplyId": 1
 }
+
+###
+
+GET {{URL}}/users HTTP/1.1
+
+###
+
+GET {{URL}}/meta HTTP/1.1

@@ -2,11 +2,23 @@ module App.Constant where
 
 import Prelude
 
-import Models (ModelMeta)
+import Models (ModelMeta, ModelUsers)
 import Utils (currentDir, pathJoin)
 
 defaultServerPort :: Int
 defaultServerPort = 8080
+
+defaultModelUsers :: ModelUsers
+defaultModelUsers = [
+  { userId: 1
+  , userName: "admin"
+  , userPassword: "123456"
+  , userEmail: "admin@gmail.com"
+  , userTime: 0
+  , userAlive: true
+  , userAdmin: true
+  }
+]
 
 defaultModelMeta :: ModelMeta
 defaultModelMeta =
