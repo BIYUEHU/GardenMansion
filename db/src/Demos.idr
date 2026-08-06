@@ -17,4 +17,3 @@ mainAsync =  do
   MkAsyncIOFromIO $ printLn b
   MkAsyncIOFromIO $ printLn c
   close db
-

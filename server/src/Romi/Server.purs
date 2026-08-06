@@ -35,7 +35,6 @@ handlerBus routes req = case find match routes of
   where
     match (Route method path _) = method == req.method && path == req.path
 
-
 foreign import createServerPrim :: (Request -> RequestPrim -> ResponsePrim -> Effect Unit) -> (String -> String -> Tuple String String) -> (String -> Method) -> Effect Server
 
 createServer :: forall env. Routes env -> env -> Maybe (RequestPrim -> ResponsePrim -> Effect Unit) -> Aff Server

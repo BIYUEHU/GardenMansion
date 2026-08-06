@@ -67,4 +67,3 @@ bootstrap = do
       info logger $ "Starting server..."
       server <- createServer routers env $ Just (\reqPrim -> \resPrim -> createStaticHandler "static" reqPrim resPrim)
       liftEffect $ listen server config'.port $ launchAff_ $ record logger $ "Server is running on <yellow>http://localhost:" <> show config'.port <> "</yellow>"
-

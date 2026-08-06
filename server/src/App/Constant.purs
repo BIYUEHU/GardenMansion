@@ -16,4 +16,3 @@ defaultModelUsers = [
 
 dbPrefix :: String
 dbPrefix = "garden_mansion_"
-
