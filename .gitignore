@@ -25,3 +25,4 @@ server/static
 server/server.js
 
 dist-newstyle
+extra

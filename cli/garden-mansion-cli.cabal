@@ -74,6 +74,7 @@ executable garden-mansion-cli
   build-depends:
     base ^>=4.19.1.0
     , bytestring
+    , leveldb-haskell
     , text
     , aeson
     , containers

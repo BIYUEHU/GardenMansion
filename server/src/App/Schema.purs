@@ -20,7 +20,6 @@ showErrors = foldr (\err acc -> acc <> showError err <> ";") ""
     showError (ErrorAtIndex i err) = "Error at index " <> show i <> ": " <> showError err
     showError (ErrorAtProperty prop err) = "Error at property " <> prop <> ": " <> showError err
 
-
 type Schema a = String -> Either String a
 
 schema :: forall a. ReadForeign a => Schema a
