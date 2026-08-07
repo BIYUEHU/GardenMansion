@@ -10,6 +10,8 @@
 
 > A full‑stack, self‑hosted management platform for shared flats, built with Elm and PureScript.
 
+- [我用四门函数式语言写了个全栈项目](https://www.bilibili.com/opus/1233728346500628483)
+
 ## Features
 
 - **Full functional languages**: used in Elm, PureScript, Idris2, Haskell, Dhall...
